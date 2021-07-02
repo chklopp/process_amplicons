@@ -2,7 +2,7 @@
 
 # Aim
 
-This script checks in flash overlapped amplicon reads the presence of both end primers and separate sequences using two tags (forward and reverse) then splits the sequences in files using the sample names found in the tag file. Then it extracts the most represented sequence and produces a statitics file.
+This script checks flash overlapped amplicon reads (fastq format) the presence of both end primers and separate sequences using two tags (forward and reverse) then splits the sequences in Fasta files using the sample names found in the tag file. Then it extracts the most represented sequence and produces a statitics file.
 
 # Input file formats :
 
@@ -59,6 +59,32 @@ Options:
                         Indicate the sequence of the reversed right primer
                         which will be searched (exact) default :
                         GACCTCGATGTTGGATTAAGA
+
+</pre>
+
+# outputs 
+
+The read fasta files are created in the output directory.
+The best_seq read files correspond to the most represented sequence in the samples and are also created in the output directory
+The "general_statistics.txt" file is created in the currrent directory and contains information of the reads in each sample
+
+Text tab separated tag file with 3 columns : 
+- sample name
+- sample read count
+- most represented sequence read count
+- second most represented sequence read count
+- read count histogram 
+
+<pre>
+Xnit1.fasta	2	1	1	1 1 
+Xnit2.fasta	76	62	2	62 2 1 1 1 1 1 1 1 1 1 1 1 1 
+Xnit3.fasta	195	147	2	147 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Xsy1.fasta	186	128	2	128 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Xsy2.fasta	201	149	2	149 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Xsy3.fasta	175	124	2	124 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Xsyl.fasta	89	58	8	58 8 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Xte1.fasta	228	177	2	177 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Xte2.fasta	100	69	2	69 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
 
 </pre>
 
