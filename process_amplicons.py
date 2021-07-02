@@ -232,9 +232,9 @@ def generate_stats_and_best_seq_files(outd):
                 stat = str(v)+" "+stat
                 
             if len(sorted_seq) > 1 :
-                stat = f+"\t"+str(nbseq)+"\t"+str(sorted_seq[0][1])+"\t"+str(sorted_seq[1][1])+"\t"+stat+"\n"
+                stat = f+"\t"+str(nbseq)+"\t"+str(sorted_seq[-1][1])+"\t"+str(sorted_seq[-2][1])+"\t"+stat+"\n"
             else :
-                stat = f+"\t"+str(nbseq)+"\t"+str(sorted_seq[0][1])+"\tO\t"+stat+"\n"
+                stat = f+"\t"+str(nbseq)+"\t"+str(sorted_seq[-1][1])+"\tO\t"+stat+"\n"
             fhso.write(stat)
     fhso.close()
 
