@@ -138,61 +138,34 @@ def process_file(outdir, f, fw, rv, tags, fhandler):
     else :
         line_count=0
         seq_name = "" 
-        if extension == ".gz" :
+        if os.path.exists(f):
+            if extension == ".gz" :
             # print("file : "+f)
-            if os.path.exists(f):
-                with gzip.open(f, 'rt') as fi:
-                    try:
-                        for l in fi :
-                            # print(l)
-                            line_count += 1
-                            # get seqname
-                            if line_count%4 == 1:
-                                seq_name = l[1:-1].split(" ")[0]
-                                #print(l)
-                                # print("seq name : "+seq_name)
-                            if line_count%4 == 2:
-                                #print(l)
-                                (strand, left, right, seq, lseq, rseq) = find_primers(l, primers)
-                                # print(strand, left, right, seq)
-                                # the sequence was found then it should be attributed to the correct sample 
-                                if strand != "=" :
-                                    sample = "None"
-                                    sample = find_tags(seq, strand, lseq, rseq, fw, rv, tags)
-                                    # print("sample : "+sample )
-                                    # the sample found the seqeunces should be printed 
-                                    if sample != "None" :
-                                        print_seq_to_file(outdir, seq_name, strand, left, right, seq, sample, fhandler)
-                            else :
-                                continue
-                    except :
-                        sys.stderr.write("#### can not open "+f+" file\n")
-        else :
-            if os.path.exists(f):
-                with open(f, 'rt') as fi:
-                    try:
-                        for l in fi :
-                            #print(l)
-                            line_count += 1
-                            # get seqname
-                            if line_count%4 == 1:
-                                seq_name = l[1:-1].split(" ")[0]
-                                #print(l)
-                                #print("seq name : "+seq_name)
-                            if line_count%4 == 2:
-                                #print(l)
-                                (strand, left, right, seq, lseq, rseq) = find_primers(l, primers)
-                                # the sequence was found then it should be attributed to the correct sample 
-                                sample = "None"
-                                sample = find_tags(seq, strand, lseq, rseq, fw, rv, tags)
-                                #print("sample : "+sample )
-                                # the sample found the seqeunces should be printed 
-                                if sample != "None" :
-                                    print_seq_to_file(outdir, seq_name, strand, left, right, seq, sample, fhandler)
-                            else :
-                                continue
-                    except :
-                        sys.stderr.write("#### can not open "+f+" file\n")
+                fi = gzip.open(f, 'rt')
+            else :
+                fi = open(f, 'rt')
+                
+            for l in fi :
+                # print(l)
+                line_count += 1
+                # get seqname
+                if line_count%4 == 1:
+                    seq_name = l[1:-1].split(" ")[0]
+                    # print("seq name : "+seq_name)
+                if line_count%4 == 2:
+                    #print(l)
+                    (strand, left, right, seq, lseq, rseq) = find_primers(l, primers)
+                    # print(strand, left, right, seq)
+                    # the sequence was found then it should be attributed to the correct sample 
+                    if strand != "=" :
+                        sample = "None"
+                        sample = find_tags(seq, strand, lseq, rseq, fw, rv, tags)
+                        # print("sample : "+sample )
+                        # the sample found the seqeunces should be printed 
+                        if sample != "None" :
+                            print_seq_to_file(outdir, seq_name, strand, left, right, seq, sample, fhandler)
+                    else :
+                        continue
              
     sys.stderr.write("#### "+str(int(line_count/4))+" sequences processed\n")
              
@@ -202,7 +175,11 @@ def generate_stats_and_best_seq_files(outd):
     # read all fasta files 
     files = [f for f in os.listdir(outd) if f.endswith('.fasta')]
     fhso = open("general_statistics.txt","w")
+    samples = {} # data structure to validate samples (sample_name + sample version in one char)
     for f in files :
+        sample_name = os.path.splitext(f)[0]
+        species_name = sample_name[0:-1]
+        # print("sample name ",sample_name)
         seq = {}
         fh = open(outd+"/"+f,"r")
         # fill dictonnary of sequences 
@@ -210,7 +187,7 @@ def generate_stats_and_best_seq_files(outd):
             fho = open(outd+"/"+f+".best_seq","w")
             nbseq = 0
             for l in fh :
-                #print(l)
+                #print(l)general_statistics.txt
                 if l[0:1] != ">" :
                     nbseq += 1
                     nuc = l[0:-1]
@@ -225,22 +202,48 @@ def generate_stats_and_best_seq_files(outd):
             fho.write(">ref_seq_"+f+"\n")
             fho.write(str(sorted_seq[-1][0])+"\n")
             fho.close()
-            stat = ""
-        
             
+            stat = ""
+            # create stat line with all the counts for the different sequences found in the sample
             for k,v in sorted_seq :
                 stat = str(v)+" "+stat
                 
+            # writing the stat line 
             if len(sorted_seq) > 1 :
+                # print(sorted_seq, len(sorted_seq), sorted_seq[len(sorted_seq)][1])
                 stat = f+"\t"+str(nbseq)+"\t"+str(sorted_seq[-1][1])+"\t"+str(sorted_seq[-2][1])+"\t"+stat+"\n"
             else :
                 stat = f+"\t"+str(nbseq)+"\t"+str(sorted_seq[-1][1])+"\tO\t"+stat+"\n"
             fhso.write(stat)
+            
+            # writing the sample information
+            if species_name in samples :
+                #print("append ",species_name, sample_name, samples[species_name])
+                samples[species_name].append([sample_name, str(sorted_seq[-1][0]),sorted_seq[-1][1]])
+            else :
+                #print("create ", species_name, sample_name)
+                samples[species_name] = [[sample_name, str(sorted_seq[-1][0]),sorted_seq[-1][1]]]
+                #print("after create ",sample_name, samples[species_name])
+                
     fhso.close()
-
-        
-        # write element in the stat file 
-        
+    return(samples)
+   
+def check_samples(samples):
+    for k,v in samples.items() :
+        #print(k,v)
+        # Check sequence correspondence 
+        seq = []
+        for i,s in enumerate(v) :
+            # print(i, s)
+            seq.append(s[1])
+            
+        sseq = set(seq)
+        if len(sseq) == 1 :
+            print("OK", k, str(i+1), ",".join(sseq), sep="\t")
+        else :
+            for i,s in enumerate(v) :
+                print("KO", k, str(i+1), s[0], s[1],  str(s[2]), sep="\t")
+            
     
 
 if __name__ == "__main__":
@@ -280,4 +283,5 @@ if __name__ == "__main__":
         # checking second genome file extension if exists
         process_file(options.outputDirectory, options.readFile, foward, reverse, tags, fh)
         close_output_files(fh)
-        generate_stats_and_best_seq_files(options.outputDirectory)
+        samples = generate_stats_and_best_seq_files(options.outputDirectory)
+        check_samples(samples)
